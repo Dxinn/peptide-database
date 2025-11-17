@@ -1,0 +1,217 @@
+{{ define "main" }}
+<div class="container">
+    <h1 class="text-center">📊 数据可视化</h1>
+    
+    <div class="card p-20">
+        <p>这里展示了多肽数据库的统计信息和可视化图表。</p >
+    </div>
+
+    {{ $peptides := .Site.Data.peptides }}
+    
+    <!-- 统计卡片 -->
+    <div class="grid grid-4 mb-20">
+        <div class="card stats-card">
+            <div class="stats-number">{{ len $peptides }}</div>
+            <div class="stats-label">总肽数</div>
+        </div>
+        <div class="card stats-card">
+            <div class="stats-number">
+                {{ $targets := slice }}
+                {{ range $peptides }}
+                    {{ if and .多肽靶点 (not (in $targets .多肽靶点)) }}
+                        {{ $targets = $targets | append .多肽靶点 }}
+                    {{ end }}
+                {{ end }}
+                {{ len $targets }}
+            </div>
+            <div class="stats-label">独特靶点</div>
+        </div>
+        <div class="card stats-card">
+            <div class="stats-number">
+                {{ $clinicalCount := 0 }}
+                {{ range $peptides }}
+                    {{ if eq .是否临床 "Yes" }}{{ $clinicalCount = add $clinicalCount 1 }}{{ end }}
+                {{ end }}
+                {{ $clinicalCount }}
+            </div>
+            <div class="stats-label">临床阶段</div>
+        </div>
+        <div class="card stats-card">
+            <div class="stats-number">
+                {{ $applications := slice }}
+                {{ range $peptides }}
+                    {{ if and .多肽的应用范围 (not (in $applications .多肽的应用范围)) }}
+                        {{ $applications = $applications | append .多肽的应用范围 }}
+                    {{ end }}
+                {{ end }}
+                {{ len $applications }}
+            </div>
+            <div class="stats-label">应用领域</div>
+        </div>
+    </div>
+
+    <!-- 图表容器 -->
+    <div class="grid grid-2 mb-20">
+        <div class="card">
+            <h3>靶点分布</h3>
+            <canvas id="targetChart" width="400" height="300"></canvas>
+        </div>
+        <div class="card">
+            <h3>临床状态分布</h3>
+            <canvas id="clinicalChart" width="400" height="300"></canvas>
+        </div>
+    </div>
+
+    <div class="grid grid-2 mb-20">
+        <div class="card">
+            <h3>应用领域分布</h3>
+            <canvas id="applicationChart" width="400" height="300"></canvas>
+        </div>
+        <div class="card">
+            <h3>亲和力分布</h3>
+            <canvas id="affinityChart" width="400" height="300"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- 引入Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+// 获取多肽数据
+const peptideData = {{ .Site.Data.peptides | jsonify }};
+
+// 准备图表数据
+function prepareChartData() {
+    // 靶点分布
+    const targetCounts = {};
+    peptideData.forEach(peptide => {
+        const target = peptide.多肽靶点 || '未知';
+        targetCounts[target] = (targetCounts[target] || 0) + 1;
+    });
+    
+    // 临床状态分布
+    const clinicalCounts = { 'Yes': 0, 'No': 0, '未知': 0 };
+    peptideData.forEach(peptide => {
+        const clinical = peptide.是否临床 || '未知';
+        if (clinical === 'Yes' || clinical === 'No') {
+            clinicalCounts[clinical]++;
+        } else {
+            clinicalCounts['未知']++;
+        }
+    });
+    
+    // 应用领域分布
+    const applicationCounts = {};
+    peptideData.forEach(peptide => {
+        const application = peptide.多肽的应用范围 || '未知';
+        applicationCounts[application] = (applicationCounts[application] || 0) + 1;
+    });
+    
+    // 亲和力分布（分组）
+    const affinityRanges = {
+        '0-1 μM': 0,
+        '1-10 μM': 0,
+        '10-100 μM': 0,
+        '>100 μM': 0,
+        '未知': 0
+    };
+    
+    peptideData.forEach(peptide => {
+        const affinity = parseFloat(peptide.亲和力);
+        if (isNaN(affinity)) {
+            affinityRanges['未知']++;
+        } else if (affinity <= 1) {
+            affinityRanges['0-1 μM']++;
+        } else if (affinity <= 10) {
+            affinityRanges['1-10 μM']++;
+        } else if (affinity <= 100) {
+            affinityRanges['10-100 μM']++;
+        } else {
+            affinityRanges['>100 μM']++;
+        }
+    });
+    
+    return {
+        targetCounts,
+        clinicalCounts,
+        applicationCounts,
+        affinityRanges
+    };
+}
+
+// 初始化图表
+document.addEventListener('DOMContentLoaded', function() {
+    const chartData = prepareChartData();
+    
+    // 靶点分布图表
+    new Chart(document.getElementById('targetChart'), {
+        type: 'bar',
+        data: {
+            labels: Object.keys(chartData.targetCounts),
+            datasets: [{
+                label: '靶点分布',
+                data: Object.values(chartData.targetCounts),
+                backgroundColor: '#27ae60'
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
+    
+    // 临床状态分布图表
+    new Chart(document.getElementById('clinicalChart'), {
+        type: 'pie',
+        data: {
+            labels: Object.keys(chartData.clinicalCounts),
+            datasets: [{
+                data: Object.values(chartData.clinicalCounts),
+                backgroundColor: ['#27ae60', '#e74c3c', '#95a5a6']
+            }]
+        }
+    });
+    
+    // 应用领域分布图表
+    new Chart(document.getElementById('applicationChart'), {
+        type: 'doughnut',
+        data: {
+            labels: Object.keys(chartData.applicationCounts),
+            datasets: [{
+                data: Object.values(chartData.applicationCounts),
+                backgroundColor: [
+                    '#27ae60', '#e74c3c', '#3498db', '#f39c12', 
+                    '#9b59b6', '#1abc9c', '#d35400', '#c0392b'
+                ]
+            }]
+        }
+    });
+    
+    // 亲和力分布图表
+    new Chart(document.getElementById('affinityChart'), {
+        type: 'bar',
+        data: {
+            labels: Object.keys(chartData.affinityRanges),
+            datasets: [{
+                label: '亲和力分布',
+                data: Object.values(chartData.affinityRanges),
+                backgroundColor: '#3498db'
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
+});
+</script>
+{{ end }}

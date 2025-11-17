@@ -1,0 +1,110 @@
+{{ define "main" }}
+<div style="padding: 20px; max-width: 1000px; margin: 0 auto; font-family: Arial, sans-serif;">
+    <h1 style="color: #27ae60; text-align: center;">🔍 多肽数据库搜索</h1>
+    
+    <!-- 搜索框 -->
+    <div style="background: #f0f8f0; padding: 30px; border-radius: 10px; margin: 20px 0; text-align: center;">
+        <form action="/search/" method="get">
+            <input 
+                type="text" 
+                name="q" 
+                id="searchInput" 
+                value="{{ .Params.q }}"
+                placeholder="输入关键词搜索（多肽名称、序列、靶点、作者等）..." 
+                style="width: 80%; padding: 15px; font-size: 16px; border: 2px solid #27ae60; border-radius: 25px; outline: none;"
+                autofocus
+            >
+            <button 
+                type="submit" 
+                style="padding: 15px 30px; background: #27ae60; color: white; border: none; border-radius: 25px; margin-left: 10px; cursor: pointer;"
+            >
+                搜索
+            </button>
+        </form>
+    </div>
+
+    {{ if .Params.q }}
+    <!-- 搜索结果 -->
+    <div id="searchResults">
+        {{ $query := .Params.q | lower }}
+        {{ $peptides := .Site.Data.peptides }}
+        
+        <!-- 使用 findRE 函数进行搜索 -->
+        {{ $results := slice }}
+        {{ range $index, $row := $peptides }}
+            {{ $match := false }}
+            {{ $fields := slice $row.多肽名称 $row.多肽序列N_C端 $row.多肽靶点 $row.作者 }}
+            {{ range $fields }}
+                {{ if . }}
+                    {{ if findRE $query (lower .) }}
+                        {{ $match = true }}
+                    {{ end }}
+                {{ end }}
+            {{ end }}
+            {{ if $match }}
+                {{ $results = $results | append (dict "index" $index "row" $row) }}
+            {{ end }}
+        {{ end }}
+        
+        <div style="background: #e8f5e8; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            <p>搜索 "<strong>{{ .Params.q }}</strong>" 找到 <strong>{{ len $results }}</strong> 条结果</p>
+        </div>
+        
+        {{ if gt (len $results) 0 }}
+        <table style="width: 100%; border-collapse: collapse; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+            <thead>
+                <tr style="background-color: #27ae60; color: white;">
+                    <th style="padding: 15px; text-align: left;">多肽名称</th>
+                    <th style="padding: 15px; text-align: left;">序列</th>
+                    <th style="padding: 15px; text-align: left;">靶点</th>
+                    <th style="padding: 15px; text-align: left;">亲和力</th>
+                    <th style="padding: 15px; text-align: left;">操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{ range $results }}
+                {{ $row := .row }}
+                <tr style="border-bottom: 1px solid #eee;">
+                    <td style="padding: 12px;">
+                        <a href="/peptides/{{ .index }}/" style="color: #27ae60; text-decoration: none; font-weight: bold;">
+                            {{ $row.多肽名称 }}
+                        </a>
+                    </td>
+                    <td style="padding: 12px; font-family: monospace;">
+                        <code>{{ $row.多肽序列N_C端 }}</code>
+                    </td>
+                    <td style="padding: 12px;">{{ $row.多肽靶点 }}</td>
+                    <td style="padding: 12px;">{{ $row.亲和力 }}</td>
+                    <td style="padding: 12px;">
+                        <a href="/peptides/{{ .index }}/" style="color: #2196F3; text-decoration: none;">查看详情</a>
+                    </td>
+                </tr>
+                {{ end }}
+            </tbody>
+        </table>
+        {{ else }}
+        <div style="text-align: center; padding: 50px; color: #666;">
+            <p>😔 没有找到匹配 "{{ .Params.q }}" 的结果</p>
+            <p>请尝试其他关键词或检查拼写</p>
+        </div>
+        {{ end }}
+    </div>
+    {{ else }}
+    <!-- 搜索提示 -->
+    <div style="text-align: center; color: #666; padding: 50px;">
+        <p>🔍 请输入关键词开始搜索</p>
+        <p>可以搜索：多肽名称、序列片段、靶点名称、作者等</p>
+    </div>
+    {{ end }}
+</div>
+
+<script>
+// 简单的客户端搜索增强
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput && !searchInput.value) {
+        searchInput.focus();
+    }
+});
+</script>
+{{ end }}

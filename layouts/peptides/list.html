@@ -1,0 +1,91 @@
+{{ define "main" }}
+<div class="container">
+    <div class="card p-20">
+        <h2 class="text-center">多肽数据库</h2>
+        
+        {{ $peptides := .Site.Data.peptides }}
+        
+        <!-- 统计卡片 -->
+        <div class="grid grid-3 mb-20">
+            <div class="card stats-card">
+                <div class="stats-number">{{ len $peptides }}</div>
+                <div class="stats-label">总肽数</div>
+            </div>
+            <div class="card stats-card">
+                <div class="stats-number">
+                    {{ $targets := slice }}
+                    {{ range $peptides }}
+                        {{ if and .多肽靶点 (not (in $targets .多肽靶点)) }}
+                            {{ $targets = $targets | append .多肽靶点 }}
+                        {{ end }}
+                    {{ end }}
+                    {{ len $targets }}
+                </div>
+                <div class="stats-label">独特靶点</div>
+            </div>
+            <div class="card stats-card">
+                <div class="stats-number">
+                    {{ $clinicalCount := 0 }}
+                    {{ range $peptides }}
+                        {{ if eq .是否临床 "Yes" }}{{ $clinicalCount = add $clinicalCount 1 }}{{ end }}
+                    {{ end }}
+                    {{ $clinicalCount }}
+                </div>
+                <div class="stats-label">临床阶段</div>
+            </div>
+        </div>
+
+        <!-- 操作按钮 -->
+        <div class="grid grid-3 mb-20">
+            <a href="/search/" class="btn btn-primary">🔍 搜索数据</a>
+            <a href="/filter/" class="btn btn-secondary">🎛️ 高级筛选</a>
+            <a href="/export/" class="btn btn-outline">📥 导出数据</a>
+        </div>
+
+        <!-- 数据表格 -->
+        <div class="table-container">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>多肽名称</th>
+                        <th>序列</th>
+                        <th>靶点</th>
+                        <th>亲和力</th>
+                        <th>应用范围</th>
+                        <th>临床状态</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{ range $index, $row := $peptides }}
+                    <tr>
+                        <td>{{ add $index 1 }}</td>
+                        <td>
+                            <a href="/peptides/{{ $index }}/" style="color: var(--primary-color); text-decoration: none;">
+                                <strong>{{ $row.多肽名称 }}</strong>
+                            </a>
+                        </td>
+                        <td><code>{{ $row.多肽序列N_C端 }}</code></td>
+                        <td>{{ $row.多肽靶点 }}</td>
+                        <td>{{ $row.亲和力 }} μM</td>
+                        <td>{{ $row.多肽的应用范围 }}</td>
+                        <td>
+                            <span style="background: {{ if eq $row.是否临床 "Yes" }}#4CAF50{{ else }}#ff9800{{ end }}; 
+                            color: white; padding: 4px 8px; border-radius: 12px; font-size: 12px;">
+                                {{ $row.是否临床 }}
+                            </span>
+                        </td>
+                        <td>
+                            <a href="/peptides/{{ $index }}/" class="btn btn-outline" style="padding: 5px 10px; font-size: 12px;">
+                                详情
+                            </a>
+                        </td>
+                    </tr>
+                    {{ end }}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{{ end }}

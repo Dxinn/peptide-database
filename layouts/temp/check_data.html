@@ -1,0 +1,6 @@
+{{ define "main" }}
+<div style="padding: 20px;">
+    <h1>数据检查</h1>
+    <pre>{{ .Site.Data.peptides | jsonify }}</pre>
+</div>
+{{ end }}

@@ -1,0 +1,49 @@
+baseURL = "https://your-peptide-db.netlify.app/"
+languageCode = "zh-cn"
+title = "多肽数据库"
+theme = "mainroad"
+
+[params]
+  primaryColor = "#27ae60"
+  backgroundColor = "#f8f9fa"
+  
+# 菜单配置
+[[menu.main]]
+  name = "首页"
+  url = "/"
+  weight = 1
+
+[[menu.main]]
+  name = "浏览数据"
+  url = "/peptides/"
+  weight = 2
+
+[[menu.main]]
+  name = "🔍 搜索"
+  url = "/search/"
+  weight = 3
+
+[[menu.main]]
+  name = "🎛️ 筛选"
+  url = "/filter/"
+  weight = 4
+
+[[menu.main]]
+  name = "📊 可视化"
+  url = "/visualization/"
+  weight = 5
+
+[[menu.main]]
+  name = "📝 提交数据"
+  url = "/submit/"
+  weight = 6
+
+[[menu.main]]
+  name = "📥 导出"
+  url = "/export/"
+  weight = 7
+
+[[menu.main]]
+  name = "关于"
+  url = "/about/"
+  weight = 8

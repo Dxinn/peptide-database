@@ -1,0 +1,317 @@
+{{ define "main" }}
+<div class="container">
+    <div class="card p-20">
+        <h1 class="text-center">📝 提交新的多肽数据</h1>
+        <p class="text-center" style="color: #666; margin-bottom: 30px;">
+            请填写以下表单提交新的多肽研究数据。所有字段均为必填项。
+        </p>
+
+        <!-- 数据提交表单 -->
+        <form name="peptide-submission" method="POST" netlify-honeypot="bot-field" netlify>
+            <!-- 防垃圾邮件字段 -->
+            <p style="display: none;">
+                <label>不要填写这个字段: <input name="bot-field"></label>
+            </p>
+            
+            <!-- 第一部分：文章信息 -->
+            <div class="form-section">
+                <h3 style="color: #27ae60; border-bottom: 2px solid #f0f8f0; padding-bottom: 10px; margin-bottom: 20px;">📄 文章信息</h3>
+                
+                <div class="form-group">
+                    <label for="title">文章题目 *</label>
+                    <input type="text" id="title" name="title" required class="form-input" placeholder="请输入研究多肽的文章题目">
+                </div>
+                
+                <div class="form-group">
+                    <label for="authors">文章作者 *</label>
+                    <input type="text" id="authors" name="authors" required class="form-input" placeholder="请输入作者姓名，多个作者用逗号分隔">
+                </div>
+                
+                <div class="form-group">
+                    <label for="abstract">文章摘要 *</label>
+                    <textarea id="abstract" name="abstract" required class="form-textarea" rows="4" placeholder="请输入文章摘要"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="keywords">关键词 *</label>
+                    <input type="text" id="keywords" name="keywords" required class="form-input" placeholder="请输入关键词，用分号分隔">
+                </div>
+            </div>
+
+            <!-- 第二部分：多肽基本信息 -->
+            <div class="form-section">
+                <h3 style="color: #27ae60; border-bottom: 2px solid #f0f8f0; padding-bottom: 10px; margin-bottom: 20px;">🧬 多肽基本信息</h3>
+                
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="peptide_name">多肽名称 *</label>
+                        <input type="text" id="peptide_name" name="peptide_name" required class="form-input" placeholder="请输入多肽名称">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="peptide_sequence">多肽序列 (N-C端) *</label>
+                        <input type="text" id="peptide_sequence" name="peptide_sequence" required class="form-input" placeholder="例如: ldvflyse">
+                    </div>
+                </div>
+                
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="is_single_target">是否为单一靶点 *</label>
+                        <select id="is_single_target" name="is_single_target" required class="form-select">
+                            <option value="">请选择</option>
+                            <option value="Yes">Yes</option>
+                            <option value="No">No</option>
+                            <option value="NA">NA</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="peptide_type">多肽类型 *</label>
+                        <select id="peptide_type" name="peptide_type" required class="form-select">
+                            <option value="">请选择</option>
+                            <option value="L">L-型</option>
+                            <option value="D">D-型</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="targets">靶点信息 *</label>
+                    <textarea id="targets" name="targets" required class="form-textarea" rows="2" placeholder="请输入靶点，多个靶点用分号分隔"></textarea>
+                </div>
+            </div>
+
+            <!-- 第三部分：实验数据 -->
+            <div class="form-section">
+                <h3 style="color: #27ae60; border-bottom: 2px solid #f0f8f0; padding-bottom: 10px; margin-bottom: 20px;">🔬 实验数据</h3>
+                
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="affinity1">亲和力 1 (μM) *</label>
+                        <input type="text" id="affinity1" name="affinity1" required class="form-input" placeholder="例如: 9.22±6.47">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="affinity2">亲和力 2 (μM)</label>
+                        <input type="text" id="affinity2" name="affinity2" class="form-input" placeholder="例如: 7.53±4.17">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="affinity_method">亲和力鉴定方法 *</label>
+                    <input type="text" id="affinity_method" name="affinity_method" required class="form-input" placeholder="例如: MST, SPR等">
+                </div>
+                
+                <div class="form-group">
+                    <label for="source">多肽来源 *</label>
+                    <select id="source" name="source" required class="form-select">
+                        <option value="">请选择</option>
+                        <option value="化学合成">化学合成</option>
+                        <option value="噬菌体肽库">噬菌体肽库</option>
+                        <option value="虚拟筛选">虚拟筛选</option>
+                        <option value="从头设计">从头设计</option>
+                        <option value="蛋白来源">蛋白来源</option>
+                        <option value="其他">其他</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="animal_model">动物模型</label>
+                    <input type="text" id="animal_model" name="animal_model" class="form-input" placeholder="例如: MC38, 4T1等">
+                </div>
+            </div>
+
+            <!-- 第四部分：应用与发现 -->
+            <div class="form-section">
+                <h3 style="color: #27ae60; border-bottom: 2px solid #f0f8f0; padding-bottom: 10px; margin-bottom: 20px;">💡 应用与发现</h3>
+                
+                <div class="form-group">
+                    <label for="function">功能描述 *</label>
+                    <textarea id="function" name="function" required class="form-textarea" rows="3" placeholder="请输入多肽的功能描述"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="application">应用范围 *</label>
+                    <select id="application" name="application" required class="form-select">
+                        <option value="">请选择</option>
+                        <option value="肿瘤">肿瘤</option>
+                        <option value="微生物">微生物</option>
+                        <option value="病毒">病毒</option>
+                        <option value="真菌">真菌</option>
+                        <option value="心血管">心血管</option>
+                        <option value="其他">其他</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="key_findings">重要发现 *</label>
+                    <textarea id="key_findings" name="key_findings" required class="form-textarea" rows="3" placeholder="请输入研究的重要发现"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="clinical_status">是否临床 *</label>
+                    <select id="clinical_status" name="clinical_status" required class="form-select">
+                        <option value="">请选择</option>
+                        <option value="Yes">Yes</option>
+                        <option value="No">No</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- 第五部分：知识产权与文献 -->
+            <div class="form-section">
+                <h3 style="color: #27ae60; border-bottom: 2px solid #f0f8f0; padding-bottom: 10px; margin-bottom: 20px;">📚 知识产权与文献</h3>
+                
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="patent_number">专利号</label>
+                        <input type="text" id="patent_number" name="patent_number" class="form-input" placeholder="请输入专利号">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="country">国家</label>
+                        <input type="text" id="country" name="country" class="form-input" placeholder="例如: China">
+                    </div>
+                </div>
+                
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="pmcid">PMCID</label>
+                        <input type="text" id="pmcid" name="pmcid" class="form-input" placeholder="例如: PMC10314633">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="doi">DOI</label>
+                        <input type="text" id="doi" name="doi" class="form-input" placeholder="例如: 10.1136/jitc-2023-007068">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 提交按钮 -->
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary" style="padding: 15px 30px; font-size: 16px;">
+                    📤 提交数据
+                </button>
+                <button type="reset" class="btn btn-outline" style="margin-left: 15px;">
+                    🔄 重置表单
+                </button>
+            </div>
+            
+            <p style="margin-top: 20px; font-size: 14px; color: #666;">
+                提交后，数据将经过管理员审核后添加到数据库中。您会收到邮件确认。
+            </p>
+        </form>
+    </div>
+</div>
+
+<style>
+.form-section {
+    background: #f8f9fa;
+    padding: 25px;
+    border-radius: 8px;
+    margin-bottom: 25px;
+    border-left: 4px solid #27ae60;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #333;
+}
+
+.form-input, .form-textarea, .form-select {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #e9ecef;
+    border-radius: 5px;
+    font-size: 14px;
+    transition: border-color 0.3s ease;
+}
+
+.form-input:focus, .form-textarea:focus, .form-select:focus {
+    outline: none;
+    border-color: #27ae60;
+}
+
+.form-textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.form-actions {
+    text-align: center;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #e9ecef;
+}
+
+@media (max-width: 768px) {
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .form-section {
+        padding: 15px;
+    }
+}
+
+/* 表单验证样式 */
+.form-input:invalid, .form-textarea:invalid, .form-select:invalid {
+    border-color: #e74c3c;
+}
+
+.form-input:valid, .form-textarea:valid, .form-select:valid {
+    border-color: #27ae60;
+}
+</style>
+
+<script>
+// 表单交互增强
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form');
+    
+    // 实时验证反馈
+    const inputs = form.querySelectorAll('input, textarea, select');
+    inputs.forEach(input => {
+        input.addEventListener('blur', function() {
+            validateField(this);
+        });
+    });
+    
+    function validateField(field) {
+        if (field.value.trim() === '' && field.hasAttribute('required')) {
+            field.style.borderColor = '#e74c3c';
+        } else {
+            field.style.borderColor = '#27ae60';
+        }
+    }
+    
+    // 表单提交处理
+    form.addEventListener('submit', function(e) {
+        let isValid = true;
+        inputs.forEach(input => {
+            if (input.hasAttribute('required') && input.value.trim() === '') {
+                isValid = false;
+                input.style.borderColor = '#e74c3c';
+            }
+        });
+        
+        if (!isValid) {
+            e.preventDefault();
+            alert('请填写所有必填字段（标有*的字段）');
+        }
+    });
+});
+</script>
+{{ end }}

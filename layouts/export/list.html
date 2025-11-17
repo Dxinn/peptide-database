@@ -1,0 +1,184 @@
+{{ define "main" }}
+<div style="padding: 20px; max-width: 1000px; margin: 0 auto; font-family: Arial, sans-serif;">
+    <h1 style="color: #27ae60; text-align: center;">📥 数据导出</h1>
+    
+    <div style="background: #f0f8f0; padding: 30px; border-radius: 10px; margin: 20px 0;">
+        <h3>导出选项</h3>
+        
+        <div style="background: white; padding: 20px; border-radius: 8px; margin: 15px 0;">
+            <h4>🔸 导出范围</h4>
+            <div>
+                <input type="radio" id="exportAll" name="exportScope" value="all" checked>
+                <label for="exportAll">全部数据</label>
+            </div>
+            <div style="margin-top: 10px;">
+                <input type="radio" id="exportCurrent" name="exportScope" value="current">
+                <label for="exportCurrent">当前筛选结果</label>
+            </div>
+        </div>
+        
+        <div style="background: white; padding: 20px; border-radius: 8px; margin: 15px 0;">
+            <h4>🔸 导出格式</h4>
+            <div>
+                <input type="radio" id="formatCSV" name="exportFormat" value="csv" checked>
+                <label for="formatCSV">CSV (Excel兼容)</label>
+            </div>
+            <div style="margin-top: 10px;">
+                <input type="radio" id="formatJSON" name="exportFormat" value="json">
+                <label for="formatJSON">JSON (程序处理)</label>
+            </div>
+        </div>
+
+        <div style="background: white; padding: 20px; border-radius: 8px; margin: 15px 0;">
+            <h4>🔸 选择导出字段</h4>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; max-height: 200px; overflow-y: auto;">
+                <div><input type="checkbox" id="fieldName" checked> <label for="fieldName">多肽名称</label></div>
+                <div><input type="checkbox" id="fieldSequence" checked> <label for="fieldSequence">多肽序列</label></div>
+                <div><input type="checkbox" id="fieldTarget" checked> <label for="fieldTarget">靶点</label></div>
+                <div><input type="checkbox" id="fieldAffinity" checked> <label for="fieldAffinity">亲和力</label></div>
+                <div><input type="checkbox" id="fieldApplication" checked> <label for="fieldApplication">应用范围</label></div>
+                <div><input type="checkbox" id="fieldClinical" checked> <label for="fieldClinical">临床状态</label></div>
+            </div>
+            <div style="margin-top: 10px;">
+                <button onclick="selectAllFields()" style="padding: 5px 10px; margin-right: 10px;">全选</button>
+                <button onclick="deselectAllFields()" style="padding: 5px 10px;">全不选</button>
+            </div>
+        </div>
+        
+        <div style="text-align: center; margin: 30px 0;">
+            <button onclick="exportData()" style="padding: 15px 30px; background: #27ae60; color: white; border: none; border-radius: 25px; font-size: 16px; cursor: pointer;">
+                📥 开始导出
+            </button>
+            <div id="exportStatus" style="margin-top: 15px;"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+const colors = {
+    success: '#4CAF50',
+    error: '#f44336',
+    warning: '#ff9800'
+};
+
+const peptideData = {{ .Site.Data.peptides | jsonify }};
+
+const fieldMapping = {
+    fieldName: '多肽名称',
+    fieldSequence: '多肽序列N_C端',
+    fieldTarget: '多肽靶点',
+    fieldAffinity: '亲和力',
+    fieldApplication: '多肽的应用范围',
+    fieldClinical: '是否临床'
+};
+
+function selectAllFields() {
+    Object.keys(fieldMapping).forEach(fieldId => {
+        const element = document.getElementById(fieldId);
+        if (element) element.checked = true;
+    });
+}
+
+function deselectAllFields() {
+    Object.keys(fieldMapping).forEach(fieldId => {
+        const element = document.getElementById(fieldId);
+        if (element) element.checked = false;
+    });
+}
+
+function showStatus(message, type) {
+    const statusEl = document.getElementById('exportStatus');
+    if (!statusEl) return;
+    
+    statusEl.innerHTML = `<span style="color: ${colors[type]}; font-weight: bold;">${message}</span>`;
+    
+    if (type === 'success') {
+        setTimeout(() => {
+            statusEl.innerHTML = '';
+        }, 5000);
+    }
+}
+
+function exportData() {
+    const exportScope = document.querySelector('input[name="exportScope"]:checked')?.value || 'all';
+    const exportFormat = document.querySelector('input[name="exportFormat"]:checked')?.value || 'csv';
+    
+    const selectedFields = Object.keys(fieldMapping).filter(fieldId => {
+        const element = document.getElementById(fieldId);
+        return element ? element.checked : false;
+    }).map(fieldId => fieldMapping[fieldId]);
+    
+    if (selectedFields.length === 0) {
+        showStatus('请至少选择一个字段', 'error');
+        return;
+    }
+    
+    showStatus('正在准备导出数据...', 'info');
+    
+    if (exportFormat === 'csv') {
+        exportToCSV(peptideData, selectedFields);
+    } else {
+        exportToJSON(peptideData, selectedFields);
+    }
+}
+
+function exportToCSV(data, fields) {
+    try {
+        let csvContent = fields.join(',') + '\n';
+        
+        data.forEach(item => {
+            const row = fields.map(field => {
+                let value = item[field] || '';
+                if (typeof value === 'string' && (value.includes(',') || value.includes('"'))) {
+                    value = '"' + value.replace(/"/g, '""') + '"';
+                }
+                return value;
+            });
+            csvContent += row.join(',') + '\n';
+        });
+        
+        downloadFile(csvContent, 'peptide_data_export.csv', 'text/csv');
+        showStatus('CSV导出成功！', 'success');
+        
+    } catch (error) {
+        showStatus('导出失败：' + error.message, 'error');
+    }
+}
+
+function exportToJSON(data, fields) {
+    try {
+        const filteredData = data.map(item => {
+            const filteredItem = {};
+            fields.forEach(field => {
+                filteredItem[field] = item[field] || '';
+            });
+            return filteredItem;
+        });
+        
+        const jsonContent = JSON.stringify(filteredData, null, 2);
+        downloadFile(jsonContent, 'peptide_data_export.json', 'application/json');
+        showStatus('JSON导出成功！', 'success');
+        
+    } catch (error) {
+        showStatus('导出失败：' + error.message, 'error');
+    }
+}
+
+function downloadFile(content, fileName, mimeType) {
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    
+    link.href = url;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    selectAllFields();
+});
+</script>
+{{ end }}

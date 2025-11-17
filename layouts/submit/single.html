@@ -1,0 +1,23 @@
+{{ define "main" }}
+<div class="container">
+    <div class="card p-20 text-center">
+        <div style="font-size: 4em; margin-bottom: 20px;">✅</div>
+        <h1 style="color: #27ae60;">提交成功！</h1>
+        <p style="font-size: 1.2em; margin: 20px 0;">
+            感谢您提交多肽数据。您的提交已成功接收，将在管理员审核后添加到数据库中。
+        </p >
+        <div style="background: #e8f5e8; padding: 20px; border-radius: 8px; margin: 30px 0;">
+            <h3>下一步</h3>
+            <ul style="text-align: left; display: inline-block;">
+                <li>您将收到邮件确认</li>
+                <li>数据将在1-3个工作日内完成审核</li>
+                <li>审核通过后会通知您</li>
+            </ul>
+        </div>
+        <div style="margin-top: 30px;">
+            <a href=" " class="btn btn-primary">返回首页</a >
+            <a href="/submit/" class="btn btn-outline" style="margin-left: 15px;">继续提交</a >
+        </div>
+    </div>
+</div>
+{{ end }}
