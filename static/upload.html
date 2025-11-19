@@ -6,41 +6,11 @@
   <title>Upload Peptide</title>
 
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 40px;
-      padding: 0;
-    }
-    .box {
-      max-width: 480px;
-      margin: auto;
-      padding: 20px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-    }
-    input, textarea {
-      width: 100%;
-      margin: 8px 0;
-      padding: 10px;
-      font-size: 16px;
-    }
-    button {
-      width: 100%;
-      padding: 12px;
-      font-size: 18px;
-      background: black;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-    .result {
-      margin-top: 20px;
-      padding: 10px;
-      font-size: 16px;
-      border-radius: 6px;
-      display: none;
-    }
+    body { font-family: Arial, sans-serif; margin: 40px; padding: 0; }
+    .box { max-width: 640px; margin: auto; padding: 20px; border: 1px solid #ccc; border-radius: 8px; }
+    input, textarea, select { width: 100%; margin: 8px 0; padding: 10px; font-size: 16px; box-sizing: border-box; }
+    button { width: 100%; padding: 12px; font-size: 18px; background: black; color: white; border: none; border-radius: 6px; cursor: pointer; }
+    .result { margin-top: 20px; padding: 10px; font-size: 16px; border-radius: 6px; display: none; }
   </style>
 </head>
 
@@ -48,49 +18,77 @@
   <div class="box">
     <h2>Upload Peptide</h2>
 
-    <input id="name" placeholder="Peptide Name (名称)" />
-    <textarea id="sequence" placeholder="Sequence (序列)" rows="4"></textarea>
-    <textarea id="activity" placeholder="Activity / Notes (活性或说明)" rows="3"></textarea>
+    <!-- 注意：name 属性和我们要发送的 JSON key 对齐 -->
+    <input id="peptide_name" placeholder="Peptide Name (名称)" />
+    <textarea id="peptide_sequence" placeholder="Sequence (序列)" rows="4"></textarea>
+    <textarea id="discoveries" placeholder="Activity / Notes / Discoveries (活性或说明)" rows="3"></textarea>
 
-    <button onclick="submitPeptide()">Submit</button>
+    <button id="submitBtn">Submit</button>
 
     <div id="result" class="result"></div>
   </div>
 
   <script>
     async function submitPeptide() {
-      const name = document.getElementById("name").value.trim();
-      const sequence = document.getElementById("sequence").value.trim();
-      const activity = document.getElementById("activity").value.trim();
-
-      if (!name || !sequence) {
-        alert("Name 和 Sequence 必填");
-        return;
-      }
+      const name = document.getElementById("peptide_name").value.trim();
+      const sequence = document.getElementById("peptide_sequence").value.trim();
+      const discoveries = document.getElementById("discoveries").value.trim();
 
       const resBox = document.getElementById("result");
       resBox.style.display = "none";
 
-      const response = await fetch("/.netlify/functions/insert-peptide", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, sequence, activity })
-      });
+      if (!name || !sequence) {
+        alert("Peptide Name 和 Sequence 为必填项");
+        return;
+      }
 
-      const data = await response.json();
+      const payload = {
+        peptide_name: name,
+        peptide_sequence: sequence,
+        discoveries: discoveries || null
+        // 你可以在这里增加更多字段，例如 authors, keyword 等
+      };
 
-      resBox.style.display = "block";
+      try {
+        const response = await fetch("/.netlify/functions/insert-peptide", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
 
-      if (response.ok) {
+        const json = await response.json().catch(() => ({ error: "Invalid JSON response" }));
+
+        resBox.style.display = "block";
+
+        if (!response.ok) {
+          resBox.style.background = "#ffe2e2";
+          resBox.style.border = "1px solid #d9534f";
+          resBox.innerHTML = "❌ 上传失败： " + (json.error || JSON.stringify(json));
+          return;
+        }
+
+        // 成功
         resBox.style.background = "#e2ffe2";
         resBox.style.border = "1px solid #5cbe5c";
-        resBox.innerHTML = "✔ 成功上传！ID: " + data.id;
-      } else {
+        // 如果后端有返回 inserted[0].id 或 similar，则显示
+        let insertedInfo = "";
+        if (json.inserted && Array.isArray(json.inserted) && json.inserted.length > 0) {
+          insertedInfo = " ID: " + (json.inserted[0].id ?? json.inserted[0].seq_id ?? "");
+        }
+        resBox.innerHTML = "✔ 成功上传！" + insertedInfo;
+        // 清空表单（按需）
+        document.getElementById("peptide_name").value = "";
+        document.getElementById("peptide_sequence").value = "";
+        document.getElementById("discoveries").value = "";
+      } catch (err) {
+        resBox.style.display = "block";
         resBox.style.background = "#ffe2e2";
         resBox.style.border = "1px solid #d9534f";
-        resBox.innerHTML = "❌ 上传失败： " + data.error;
+        resBox.innerHTML = "❌ 上传失败（网络/解析错误）： " + (err.message || String(err));
       }
     }
+
+    document.getElementById("submitBtn").addEventListener("click", submitPeptide);
   </script>
 
 </body>
