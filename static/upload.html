@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Upload Peptide</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 40px;
+      padding: 0;
+    }
+    .box {
+      max-width: 480px;
+      margin: auto;
+      padding: 20px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+    input, textarea {
+      width: 100%;
+      margin: 8px 0;
+      padding: 10px;
+      font-size: 16px;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      font-size: 18px;
+      background: black;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .result {
+      margin-top: 20px;
+      padding: 10px;
+      font-size: 16px;
+      border-radius: 6px;
+      display: none;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="box">
+    <h2>Upload Peptide</h2>
+
+    <input id="name" placeholder="Peptide Name (名称)" />
+    <textarea id="sequence" placeholder="Sequence (序列)" rows="4"></textarea>
+    <textarea id="activity" placeholder="Activity / Notes (活性或说明)" rows="3"></textarea>
+
+    <button onclick="submitPeptide()">Submit</button>
+
+    <div id="result" class="result"></div>
+  </div>
+
+  <script>
+    async function submitPeptide() {
+      const name = document.getElementById("name").value.trim();
+      const sequence = document.getElementById("sequence").value.trim();
+      const activity = document.getElementById("activity").value.trim();
+
+      if (!name || !sequence) {
+        alert("Name 和 Sequence 必填");
+        return;
+      }
+
+      const resBox = document.getElementById("result");
+      resBox.style.display = "none";
+
+      const response = await fetch("/.netlify/functions/insert-peptide", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, sequence, activity })
+      });
+
+      const data = await response.json();
+
+      resBox.style.display = "block";
+
+      if (response.ok) {
+        resBox.style.background = "#e2ffe2";
+        resBox.style.border = "1px solid #5cbe5c";
+        resBox.innerHTML = "✔ 成功上传！ID: " + data.id;
+      } else {
+        resBox.style.background = "#ffe2e2";
+        resBox.style.border = "1px solid #d9534f";
+        resBox.innerHTML = "❌ 上传失败： " + data.error;
+      }
+    }
+  </script>
+
+</body>
+</html>
